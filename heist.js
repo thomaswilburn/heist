@@ -13,13 +13,12 @@ var argv = parseArgs({
 class Heist {
   tasks = {};
 
-  constructor(plan) {
-    this.plan = plan;
-    this.home = path.dirname(plan);
+  constructor(location) {
+    this.plan = location;
+    this.home = path.dirname(location);
   }
 
-  static async findHeistfile() {
-    var here = process.cwd();
+  static async findHeistfile(here = process.cwd()) {
     var heistfile = false;
     while (here != "/") {
       // check for heistfiles at each folder working up
@@ -34,7 +33,7 @@ class Heist {
       }
     }
     if (!heistfile) {
-      console.error("Unable to locate Heistfile.js - exiting.");
+      console.error("Unable to locate heistfile.js - exiting.");
       process.exit();
     }
     return heistfile;
@@ -45,8 +44,17 @@ class Heist {
     await imported(this);
   }
 
-  defineTask(name, fn) {
+  defineTask(name, description, fn) {
+    if (typeof description != "string") {
+      fn = description;
+      description = "";
+    }
     this.tasks[name] = fn;
+    if (description) {
+      fn.description = description;
+    } else if (fn instanceof Array) {
+      fn.description = fn.join(" -> ");
+    }
   }
 
   async loadTasks(folder) {
@@ -101,7 +109,15 @@ class Heist {
 var heistfile = await Heist.findHeistfile();
 var heist = new Heist(heistfile);
 await heist.init();
-if (argv.positionals.length) {
+if (argv.values.help || argv.values.list) {
+  var taskList = Object.keys(heist.tasks).filter(t => t != "default").sort();
+  console.log(`
+Available tasks:
+----------------
+${taskList.map(t => `- ${[t, heist.tasks[t].description].filter(f => f).join(": ")}`).join("\n")}
+
+  `.trim())
+} else if (argv.positionals.length) {
   heist.run(argv.positionals);
 } else {
   heist.run();
