@@ -4,6 +4,7 @@ import { parseArgs } from "node:util";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { expand } from "./expand.js";
+import { pathToFileURL, fileURLToPath } from "node:url";
 
 var argv = parseArgs({
   allowPositionals: true,
@@ -36,11 +37,11 @@ class Heist {
       console.error("Unable to locate heistfile.js - exiting.");
       process.exit();
     }
-    return heistfile;
   }
 
   async init() {
-    var { default: imported } = await import(this.plan);
+    var file = pathToFileURL(this.plan).href;
+    var { default: imported } = await import(file);
     await imported(this);
   }
 
@@ -64,7 +65,8 @@ class Heist {
       var mod = path.resolve(dir, f);
       var stat = await fs.stat(mod);
       if (stat.isDirectory()) continue;
-      var { default: imported } = await import(mod);
+      var url = pathToFileURL(mod).href;
+      var { default: imported } = await import(url);
       await imported(this);
     }
   }
@@ -104,7 +106,6 @@ class Heist {
     return files.map(f => path.relative(this.home, f));
   }
 }
-
 
 var heistfile = await Heist.findHeistfile();
 var heist = new Heist(heistfile);
