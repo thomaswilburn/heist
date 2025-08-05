@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { parseArgs } from "node:util";
+import { styleText, parseArgs } from "node:util";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { expand } from "./expand.js";
@@ -52,11 +52,6 @@ class Heist {
     }
   }
 
-  logTask(name) {
-    var tag = `Executing task: ${name}`;
-    console.log(`\n${tag}\n${"".padStart(tag.length, "-")}`);
-  }
-
   async run(taskList = "default", context = {}) {
     process.chdir(this.home);
     if (typeof taskList == "string") {
@@ -76,7 +71,7 @@ class Heist {
           console.error(err);
         }
       } else {
-        this.logTask(name);
+        console.log(styleText(["underline"], `\nExecuting task: ${name}`));
         await this.tasks[name](target, context, this);
       }
     }
