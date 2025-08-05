@@ -86,7 +86,6 @@ class Heist {
         console.error(`Task not found: ${name}`);
         continue;
       }
-      this.logTask(name);
       if (task instanceof Array) {
         try {
           await this.run(task, context);
@@ -94,6 +93,7 @@ class Heist {
           console.error(err);
         }
       } else {
+        this.logTask(name);
         await this.tasks[name](target, context, this);
       }
     }
