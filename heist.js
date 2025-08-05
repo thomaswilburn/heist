@@ -4,6 +4,7 @@ import { parseArgs } from "node:util";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { expand } from "./expand.js";
+import findUpward from "./findUpward.js";
 import { pathToFileURL, fileURLToPath } from "node:url";
 
 var argv = parseArgs({
@@ -17,26 +18,6 @@ class Heist {
   constructor(location) {
     this.plan = location;
     this.home = path.dirname(location);
-  }
-
-  static async findHeistfile(here = process.cwd()) {
-    var heistfile = false;
-    while (here != "/") {
-      // check for heistfiles at each folder working up
-      try {
-        var loc = path.join(here, "heistfile.js");
-        var stat = await fs.stat(loc);
-        // if it stats, it exists
-        return loc;
-      } catch (err) {
-        // we expect errors for missing files
-        here = path.resolve(here, "..");
-      }
-    }
-    if (!heistfile) {
-      console.error("Unable to locate heistfile.js - exiting.");
-      process.exit();
-    }
   }
 
   async init() {
@@ -101,13 +82,17 @@ class Heist {
     }
   }
 
-  async find(patterns) {
-    var files = await expand(this.home, patterns);
-    return files.map(f => path.relative(this.home, f));
+  async find(patterns, from = this.home) {
+    var files = await expand(from, patterns);
+    return files.map(f => path.relative(from, f));
   }
 }
 
-var heistfile = await Heist.findHeistfile();
+var heistfile = await findUpward("heistfile.js");
+if (!heistfile) {
+  console.error("Unable to locate heistfile.js - exiting.");
+  process.exit();
+}
 var heist = new Heist(heistfile);
 await heist.init();
 if (argv.values.help || argv.values.list) {

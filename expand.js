@@ -25,6 +25,8 @@ export async function expand(from, patterns, dir = ".") {
   var fullDir = path.join(from, dir);
   try {
     var files = await fs.readdir(fullDir);
+    // skip hidden files and node modules
+    files = files.filter(f => f[0] != "." && f != "node_modules");
   } catch (err) {
     console.log(`Unable to read directory ${fullDir} - does it exist?`);
     return [];
