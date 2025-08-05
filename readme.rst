@@ -1,21 +1,20 @@
-Heist
+"I love it when a plan comes together."
 =====
-
-    "I love it when a plan comes together."
 
 Heist is a minimum viable replacement for Grunt that leverages the features available in modern Node. It is primarily intended to sequence and orchestrate tasks in a build system.
 
 Install with:
 
-.. code:: sh
-    npm install -g heist
+.. code::
+
+    npm install -g thomaswilburn/heist
 
 Getting started
 ---------------
 
-When you run the ``heist`` command, it will search upward from the current directory until it finds a ``heistfile.js`` that contains task definitions. Running ``heist --list`` will show all the defined tasks from that file, including their descriptions if possible. You can provide a list of tasks to execute after the ``heist`` command.
+When you run the ``heist`` command, it will search upward from the current directory until it finds a ``heistfile.js`` that contains task definitions. Running ``heist --list`` will show all the defined tasks from that file, including their descriptions if provided. You can provide a list of tasks to execute after the ``heist`` command.
 
-.. code:: sh
+.. code::
 
     $ heist --list
     Available tasks:
@@ -35,12 +34,14 @@ When you run the ``heist`` command, it will search upward from the current direc
 
 If you don't specify tasks after the command, Heist will look for a task named "default" and execute that. Tasks can also have "targets" appended to them, which is useful for switching their behavior between different presets, like running a bundler with tighter constraints in "prod" mode:
 
-.. code:: sh
+.. code::
 
     $ heist bundle:prod
 
     Executing task: bundle
+    Transpiling for older browsers...
     Minifying and obfuscating scripts...
+    Exporting source maps...
     Wrote src/js/main.js -> build/app.js
 
 If you need finer-grained control of a task, you may want to use ``parseArgs`` from the "node:util" module (or the command parser of your choice) to add support for flags. Unlike npm scripts, since your code runs in the same process as the main Heist runner, you don't need to add a ``--`` delimiter before any custom flags.
@@ -60,7 +61,7 @@ A heistfile should be an ES module that exports a single function, which takes t
 
     }
 
-Each task function receives the ``target`` (if any) and a shared ``context`` object in its arguments, which can be used to pass values between different tasks through the build process. Tasks can also be loaded from a folder of JS files. Once defined, sequences can be composed together by calling ``heist.defineTask()`` with an array of task names in the place of a function:
+Each task function receives the ``target`` (if any) and a shared ``context`` object in its arguments, which can be used to pass values between different tasks through the build process. Tasks can also be loaded from a folder of JS files using ``heist.loadTasks()``. Once defined, sequences can be composed together by calling ``heist.defineTask()`` with an array of task names in the place of a function:
 
 .. code:: js
 
@@ -88,7 +89,7 @@ Each task function receives the ``target`` (if any) and a shared ``context`` obj
 
     }
 
-Tasks will be executed with the working directory set to the location of the heistfile for easier path management. Heist will also `await` any tasks defined as async functions, or those that return promises. If you want to run tasks in parallel, you can take advantage of JavaScript's ``Promise`` class:
+Tasks will be executed with the working directory set to the location of the heistfile for easier path management. Heist will also `await` any tasks defined as async functions, or those that return promises. If you want to run tasks in parallel, you can take advantage of JavaScript's rich array of ``Promise`` methods:
 
 .. code:: js
 
@@ -121,21 +122,21 @@ API
 ===
 
 ``Heist.defineTask(name, [description], functionOrTaskList)``
----
+-----
 
 Adds a task definition to the Heist runner. Description is optional but useful when listing options at the command line. ``functionOrTaskList`` can be either a function with ``target`` and ``context`` arguments, or a list of task names to run in sequence.
 
-``Heist.loadTasks(foldername)`` (async)
----
+``Heist.loadTasks(foldername)`` - *async*
+-----
 
 Loads all .js files in a folder, using the same structure as a heistfile (i.e., exporting a single function containing task definitions).
 
-``Heist.run(taskNameOrArray, context = {})`` (async)
----
+``Heist.run(taskNameOrArray, context = {})`` - *async*
+-----
 
 Execute a task or tasks by name, with an optional context object. If you're using this to execute a subtask, you can either pass in the same ``context`` object that the parent task received, or provide entirely new context data.
 
-``Heist.find(patterns, folder = ".")`` (async)
----
+``Heist.find(patterns, folder = ".")`` - *async*
+-----
 
 Locate files matching a `minimatch <https://github.com/isaacs/minimatch>`_ globbing pattern. Defaults to searching from the same directory as the heistfile, but can be scoped down to a subdirectory with the ``folder`` argument, which can make it substantially faster. This function ignores any file or directory that starts with a ``.``, as well as the ``node_modules`` folder. Provided because it's one of the few file system operations that remains clunky in the Node standard library.
