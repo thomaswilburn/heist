@@ -138,12 +138,12 @@ Loads all .js files in a folder, using the same structure as a heistfile (i.e., 
 
 Execute a task or tasks by name, with an optional context object. If you're using this to execute a subtask, you can either pass in the same ``context`` object that the parent task received, or provide entirely new context data.
 
-``Heist.find(patterns, options = { dir: ".", prefilter: /^\.|node_modules/ })`` - *async*
+``Heist.find(patterns, options = {})`` - *async*
 -----
 
 Locate files matching a `minimatch <https://github.com/isaacs/minimatch>`_ globbing pattern. Defaults to searching from the same directory as the heistfile. Provided because it's one of the few file system operations that remains clunky in the Node standard library. Arguments include:
 
 - ``options`` - Either a string (shortcut for ``options.dir``), or a configuration object
-- ``options.dir`` - Scope the search to a path relative to the location of the heistfile instead of searching the entire directory
-- ``options.prefilter`` - A regex that will exclude paths from searches before applying minimatch.
+- ``options.dir`` - Scope the search to a path relative to the location of the heistfile instead of searching the entire directory. Defaults to ``"."``.
+- ``options.prefilter`` - A regex that will exclude paths from searches before applying minimatch. Defaults to ``/^\.|node_modules/``.
 
