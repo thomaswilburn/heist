@@ -10,8 +10,8 @@ import { minimatch } from "minimatch";
 import path from "node:path";
 
 const DEFAULTS = {
-  dir: ".",
-  prefilter: /^\.|node_modules/
+  prefilter: /^\.|node_modules/,
+  dir: "."
 }
 
 // check if a file matches any or all (strict mode) patterns in a list
@@ -23,15 +23,12 @@ var filterFile = function(file, patterns, strict) {
 
 // implements glob matching for a directory based on a list of patterns
 // returns all files that match
-export async function expand(from, patterns, tweaks = {}) {
+export async function expand(patterns, tweaks = {}, current = ".") {
   if (typeof patterns == "string") {
     patterns = [ patterns ];
   }
-  if (typeof tweaks == "string") {
-    tweaks = { dir: tweaks };
-  }
   var options = Object.assign({}, DEFAULTS, tweaks);
-  var fullDir = path.join(from, options.dir);
+  var fullDir = path.join(options.dir, current);
   try {
     var files = await fs.readdir(fullDir);
     // skip hidden files and node modules
@@ -45,12 +42,12 @@ export async function expand(from, patterns, tweaks = {}) {
   var negative = patterns.filter(p => p[0] == "!");
   for (var i = 0; i < files.length; i++) {
     var f = files[i];
-    var full = path.join(from, options.dir, f);
-    var relative = path.relative(from, full);
+    var full = path.join(options.dir, current, f);
+    var relative = path.relative(options.dir, full);
     try {
       var stat = await fs.stat(full);
       if (stat.isDirectory()) {
-        var children = await expand(from, patterns, { ...options, dir: relative });
+        var children = await expand(patterns, options, relative);
         matching.push(...children);
       } else {
         var matched = filterFile(relative, affirmative);

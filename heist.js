@@ -77,9 +77,12 @@ class Heist {
     }
   }
 
-  async find(patterns, from = this.home) {
-    var files = await expand(from, patterns);
-    return files.map(f => path.relative(from, f));
+  async find(patterns, options = { dir: "." }) {
+    if (typeof options == "string") {
+      options = { dir: options };
+    }
+    var files = await expand(patterns, options);
+    return files.map(f => path.relative(options.dir, f));
   }
 }
 
